@@ -1,0 +1,11 @@
+#!/usr/bin/python
+"""
+simple wrapper around graffle2svg for use as a viewer
+
+use:
+graffle2svgview FILENAME
+"""
+
+if __name__ == "__main__":
+    import subprocess, sys
+    subprocess.call(('graffle2svg', "-d", sys.argv[1]))

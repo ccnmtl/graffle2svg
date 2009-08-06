@@ -1,0 +1,121 @@
+#!/usr/bin/python
+"""
+   Main entry point for graffle2svg
+"""
+#Copyright (c) 2009, Tim Wintle
+#All rights reserved.
+#
+#Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+#
+#    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+#    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+#    * Neither the name of the project nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+#THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+from main import GraffleParser
+
+
+def get_options():
+    from optparse import OptionParser
+    usage = """
+       %prog [options] SOURCE DESTINATION
+   or: %prog [options] DESTINATION
+   or: %prog [options] --display SOURCE
+   or: %prog [options] --display
+   or: %prog [options] --stdout SOURCE
+   or: %prog [options] --stdout"""
+    
+    parser = OptionParser(usage=usage)
+    parser.add_option("-c", "--stdout", dest="stdout", 
+                        help="write converted SVG to stdout", 
+                        action="store_true")
+    parser.add_option("-d", "--display", dest="display", 
+                        help="display the file using default svg viewer. Output is ignored", 
+                        action="store_true")
+    parser.add_option("-p", "--page", dest="page", 
+                        help="for multi-page documents, page number to extract")
+    parser.add_option("-v", "--verbose", dest="verbose", 
+                        help="verbose", 
+                        action="store_true")
+                        
+    
+    (options, args) = parser.parse_args()
+    
+    # set up rest of options
+    optsdict = {}
+    optsdict["stdin"] = False
+    
+    if options.stdout == True:
+        if len(args) > 1:
+            parser.error("Too many arguments")
+        elif len(args) == 0:
+            optsdict["stdin"] = True
+        else:
+            optsdict["infile"] = args[0]
+    else:
+        if len(args) > 2:
+            parser.error("Too many arguments")
+        elif len(args) == 0 and not (options.display == True):
+            parser.error("Too few arguments")
+        elif len(args) == 1:
+            if options.display == True:
+                # don't accept outfile for display
+                optsdict["infile"] = args[0]
+            else:
+                #stdin
+                optsdict["stdin"] = True
+                optsdict["outfile"] = args[0]
+        elif len(args) == 2:
+            optsdict["infile"] = args[0]
+            optsdict["outfile"] = args[1]
+            
+    return(optsdict, options)
+    
+
+if __name__ == "__main__":
+
+    optsdict, options = get_options()
+    
+    import sys, tempfile
+    import subprocess, os
+    
+    
+    graffle_data = ""
+    if optsdict["stdin"]:
+        graffle_data = sys.stdin.read()
+    else:
+        import filepack
+        grafflefilepack = filepack.GraffleFilePack(optsdict["infile"])
+        graffle_data = grafflefilepack.read()
+        grafflefilepack.close()
+
+        
+    gp = GraffleParser()
+    try:        
+        page = int(options.page)
+        gp.walkGraffle(graffle_data, page=page)
+    except:
+        gp.walkGraffle(graffle_data)
+    
+    
+    if options.display == True:
+        # write a temp file and open that
+        outfile, filename = tempfile.mkstemp(suffix=".svg")
+        f = open(filename,"w")
+        f.write(gp.svg)
+        f.close()
+        if os.name == 'mac':
+            subprocess.call(('open', filename))
+        elif os.name == 'nt':
+            subprocess.call(('start', filename))
+        elif os.name == "posix":
+            subprocess.call(('xdg-open', filename))
+
+    elif options.stdout == True:
+        #print to stdout
+        print gp.svg
+    else:
+        f = open(optsdict["outfile"],"w")
+        f.write(gp.svg)
+        f.close()
