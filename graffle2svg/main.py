@@ -275,6 +275,13 @@ class GraffleParser(object):
                                         bounds = bounds,
                                         **extra_opts \
                                         )
+        elif shape == "Circle":
+            # Actually can be an ellipse
+            bounds = self.extractBoundCOordinates(graphic["Bounds"])
+            self.svg_addEllipse(self.svg_current_layer,
+                                        bounds = bounds,
+                                        **extra_opts \
+                                        )
         else:
             print "Don't know how to display Shape %s"%str(graphic['Shape'])
             
@@ -407,6 +414,20 @@ class GraffleParser(object):
             def_node = p.childNodes[0]
             for node in def_node.childNodes:
                 self.svg_def.appendChild(node)
+
+    def svg_addEllipse(self, node, bounds, **opts):
+        c = [bounds[i] + (bounds[i+2]/2.) for i in [0,1]] # centre of circle
+        rx = bounds[2]/2.
+        ry = bounds[3]/2.
+        circle_tag = self.svg_dom.createElement("ellipse")
+        circle_tag.setAttribute("id", opts.get("id",""))
+        circle_tag.setAttribute("style", str(self.style.scopeStyle()))
+        circle_tag.setAttribute("cx", str(c[0]))
+        circle_tag.setAttribute("cy", str(c[1]))
+        circle_tag.setAttribute("rx", str(rx))
+        circle_tag.setAttribute("ry", str(ry))
+        node.appendChild(circle_tag)
+
                              
     def svg_addPath(self, node, pts, **opts):
         # do geometry mapping here
