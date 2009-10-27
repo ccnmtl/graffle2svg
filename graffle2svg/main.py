@@ -14,6 +14,7 @@ import xml.dom.minidom
 from rtf import extractRTFString
 from styles import CascadingStyles
 import geom
+import fileinfo
 
 def mkHex(s):
     # s is a string of a float
@@ -90,7 +91,8 @@ class GraffleParser(object):
                 mydict = self.ReturnGraffleDict(e)
 
         if mydict is not None:
-        
+            # Extract file information
+            self.fileinfo = fileinfo.FileInfo(mydict)
             # Graffle lists it's image references separately
             self.imagelist = mydict.get("ImageList",[])
             # Sometimes have multiple sheets
@@ -99,13 +101,15 @@ class GraffleParser(object):
             else:
                 self.extractPage(mydict)
                 
+                
     def extractPage(self, grafflenodeasdict):
         mydict = grafflenodeasdict
         
-        # Graffle has a background graphic
-        background = mydict["BackgroundGraphic"]
-        # draw this 
-        self.svgItterateGraffleGraphics([background])
+        # Graffle version 6 has a background graphic
+        if self.fileinfo.fmt_version >= 6:
+            background = mydict["BackgroundGraphic"]
+            # draw this 
+            self.svgItterateGraffleGraphics([background])
         
         graphics = mydict["GraphicsList"]
         self.svgItterateGraffleGraphics(graphics)
