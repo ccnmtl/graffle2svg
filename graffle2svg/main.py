@@ -27,6 +27,10 @@ def nodeListGen(nodelist):
     """We need this so we can pass continuations around"""
     for e in nodelist:
         yield e
+        
+def parseCoords(s):
+    """in: "{0,1}" -> [0,1]"""
+    return [float(a) for a in s[1:-1].split(",")]
 
 class GraffleParser(object):
     g_dom = None
@@ -105,11 +109,39 @@ class GraffleParser(object):
     def extractPage(self, grafflenodeasdict):
         mydict = grafflenodeasdict
         
-        # Graffle version 6 has a background graphic
         if self.fileinfo.fmt_version >= 6:
+            # Graffle version 6 has a background graphic
             background = mydict["BackgroundGraphic"]
             # draw this 
             self.svgItterateGraffleGraphics([background])
+        elif self.fileinfo.fmt_version < 6:
+            # Version 5 has a CanvasColor property instead
+            colour = mydict["CanvasColor"]
+            sty = {}
+            
+            # We have to guess the document's dimensions from the print size
+            # - these numbers appear to match up with the background size in 
+            #  version 6.
+            origin = parseCoords(mydict.get("CanvasOrigin","{0,0}"))
+            print_info = mydict.get("PrintInfo",{})
+            paper_size = parseCoords( \
+                    print_info.get("NSPaperSize", [None,"{0,0}"])[1] )
+                    
+            Lmargin = int(print_info.get("NSLeftMargin", [None,0])[1])
+            Rmargin = int(print_info.get("NSRightMargin", [None,0])[1])
+            Tmargin = int(print_info.get("NSTopMargin", [None,0])[1])
+            Bmargin = int(print_info.get("NSBottomMargin", [None,0])[1])
+            
+            x, y   = origin
+            width  = paper_size[0] - Lmargin - Rmargin
+            height = paper_size[1] - Bmargin - Tmargin
+            self.svg_addRect(self.svg_current_layer,
+                                    x = x,
+                                    y = y,
+                                    width = width,
+                                    height = height,
+                                    rx=None,
+                                    ry=None)
         
         graphics = mydict["GraphicsList"]
         self.svgItterateGraffleGraphics(graphics)
@@ -173,9 +205,6 @@ class GraffleParser(object):
         
         
     def extractMagnetCoordinates(self,mgnts):
-        def parseCoords(s):
-            """in: "{0,1}" -> [0,1]"""
-            return [float(a) for a in s[1:-1].split(",")]
         pts = [parseCoords(a) for a in mgnts]
         return pts
         
