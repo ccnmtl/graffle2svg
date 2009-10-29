@@ -244,7 +244,7 @@ class GraffleParser(object):
                 
             elif cls == "LineGraphic":
                 pts = self.extractMagnetCoordinates(graphics["Points"])
-                
+                self.style["fill"] = "none"
                 if graphics.get("OrthogonalBarAutomatic") == False:
                     bar_pos = graphics.get("OrthogonalBarPosition")
                     if bar_pos is not None:
