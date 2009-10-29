@@ -123,14 +123,14 @@ class GraffleParser(object):
             # - these numbers appear to match up with the background size in 
             #  version 6.
             origin = parseCoords(mydict.get("CanvasOrigin","{0,0}"))
-            print_info = mydict.get("PrintInfo",{})
-            paper_size = parseCoords( \
-                    print_info.get("NSPaperSize", [None,"{0,0}"])[1] )
+            print_info = self.fileinfo.printinfo
+            
+            paper_size = print_info.paper_size
                     
-            Lmargin = int(print_info.get("NSLeftMargin", [None,0])[1])
-            Rmargin = int(print_info.get("NSRightMargin", [None,0])[1])
-            Tmargin = int(print_info.get("NSTopMargin", [None,0])[1])
-            Bmargin = int(print_info.get("NSBottomMargin", [None,0])[1])
+            Lmargin = print_info.left_margin
+            Rmargin = print_info.right_margin
+            Tmargin = print_info.top_margin
+            Bmargin = bottom_margin
             
             x, y   = origin
             width  = paper_size[0] - Lmargin - Rmargin
