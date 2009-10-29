@@ -61,7 +61,7 @@ class GraffleParser(object):
         graphic_tag = self.svg_dom.createElement("g")
         graphic_tag.setAttribute("style",str(self.style))
         svg_tag.appendChild(graphic_tag)
-        self.svg_current_layer = graphic_tag        
+        self.svg_current_layer = graphic_tag
                 
         
     @property
@@ -273,9 +273,17 @@ class GraffleParser(object):
                 # In Progress
                 table_graphics = graphics.get("Graphics")
                 if table_graphics is not None:
+                    current_layer = self.svg_current_layer
+                    self.style.appendScope()
+                    g_emt = self.svg_dom.createElement("g")
+                    g_emt.setAttribute("style",str(self.style))
+                    current_layer.appendChild(g_emt)
+                    self.svg_current_layer = g_emt
+                    
                     self.svgItterateGraffleGraphics(table_graphics)
-                    # TODO:
-                    # there must be more to a tablegroup than this...
+                    
+                    self.style.popScope()
+                    self.svg_current_layer = current_layer
                 
             else:
                 print "Don't know how to display Class \"%s\""%cls
