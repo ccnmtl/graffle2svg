@@ -234,6 +234,7 @@ class GraffleParser(object):
                 shallowcopy = {"Shape":"Rectangle"}
                 shallowcopy.update(graphics)
                 self.svgAddGraffleShapedGraphic(shallowcopy)
+                
             elif cls == "ShapedGraphic":
                 try:
                     self.svgAddGraffleShapedGraphic(graphics)
@@ -244,8 +245,18 @@ class GraffleParser(object):
             elif cls == "LineGraphic":
                 pts = self.extractMagnetCoordinates(graphics["Points"])
                 self.svg_addPath(self.svg_current_layer, pts)
+                
+            elif cls == "TableGroup":
+                # In Progress
+                table_graphics = graphics.get("Graphics")
+                if table_graphics is not None:
+                    self.svgItterateGraffleGraphics(table_graphics)
+                    # TODO:
+                    # there must be more to a tablegroup than this...
+                
             else:
                 print "Don't know how to display Class \"%s\""%cls
+                
                 
             if graphics.get("Text") is not None:
                 # have to write some text too ...
