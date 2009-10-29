@@ -18,7 +18,7 @@ import fileinfo
 
 def mkHex(s):
     # s is a string of a float
-    h = "%x"%(int(float(s)*256))
+    h = "%x"%(int(min(float(s)*256, 255)))
     if h[0] == " ":
         h="0"+h[1]
     return h
@@ -130,7 +130,7 @@ class GraffleParser(object):
             Lmargin = print_info.left_margin
             Rmargin = print_info.right_margin
             Tmargin = print_info.top_margin
-            Bmargin = bottom_margin
+            Bmargin = print_info.bottom_margin
             
             x, y   = origin
             width  = paper_size[0] - Lmargin - Rmargin
