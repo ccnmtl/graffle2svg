@@ -244,6 +244,29 @@ class GraffleParser(object):
                 
             elif cls == "LineGraphic":
                 pts = self.extractMagnetCoordinates(graphics["Points"])
+                
+                if graphics.get("OrthogonalBarAutomatic") == False:
+                    bar_pos = graphics.get("OrthogonalBarPosition")
+                    if bar_pos is not None:
+                        # Decide where to place the orthogonal position
+                        
+                        bar_pos = float(bar_pos)
+                        """
+                        # This isn't right
+                        out_pts = []
+                        i = 0
+                        while i < len(pts) - 1:
+                            p1 = pts[i]
+                            p2 = pts[i+1]
+                            newpt = [p1[0] + bar_pos, p1[1]]
+                            out_pts.append(p1)
+                            out_pts.append(newpt)
+                            out_pts.append(p2)
+                            i+=2
+                        pts = out_pts
+                        """
+                        
+                    
                 self.svg_addPath(self.svg_current_layer, pts)
                 
             elif cls == "TableGroup":
@@ -373,6 +396,10 @@ class GraffleParser(object):
                 if tailarrow == "FilledArrow":
                     self.style["marker-start"]="url(#Arrow1Lend)"
                     self.required_defs.add("Arrow1Lend")
+                elif tailarrow == "CrowBall":
+                    self.style["marker-start"]  = "url(#mCrowBall)"
+                    self.required_defs.add("CrowBall")
+                    
                 elif tailarrow == "0":
                     self.style["marker-start"]="none"
             if stroke.get("Width") is not None:
@@ -455,6 +482,22 @@ class GraffleParser(object):
                    <feMergeNode in="SourceGraphic"/>
                </feMerge>
           </filter></defs>""")
+            def_node = p.childNodes[0]
+            for node in def_node.childNodes:
+                self.svg_def.appendChild(node)
+                
+        if "CrowBall" in self.required_defs:
+            p = xml.dom.minidom.parseString("""
+            <defs><marker
+            refX="0"
+            refY="0"
+            orient="auto"
+            id="mCrowBall"
+            style="overflow:visible">
+            <path d="M 0.0,2.5 L 7.5,0.0 L 0.0,-2.5" 
+             style="stroke:#000;stroke-width:1.0pt;marker-start:none;fill:none;" />
+            <circle cx="10" cy="0" r="2.5" style="stroke-width:1pt; stroke: #000; fill:none;"/>
+            </marker></defs>""")
             def_node = p.childNodes[0]
             for node in def_node.childNodes:
                 self.svg_def.appendChild(node)
