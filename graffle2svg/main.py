@@ -396,6 +396,10 @@ class GraffleParser(object):
                 if headarrow == "FilledArrow":
                     self.style["marker-end"]=":url(#Arrow1Lend)"
                     self.required_defs.add("Arrow1Lend")
+                elif headarrow == "Bar":
+                    #TODO
+                    self.style["marker-end"]="url(#mBar)"
+                    self.required_defs.add("Bar")                    
                 elif headarrow == "0":
                     self.style["marker-end"] = "none"
                     
@@ -505,6 +509,21 @@ class GraffleParser(object):
             <path d="M 0.0,2.5 L 7.5,0.0 L 0.0,-2.5" 
              style="stroke:#000;stroke-width:1.0pt;marker-start:none;fill:none;" />
             <circle cx="10" cy="0" r="2.5" style="stroke-width:1pt; stroke: #000; fill:none;"/>
+            </marker></defs>""")
+            def_node = p.childNodes[0]
+            for node in def_node.childNodes:
+                self.svg_def.appendChild(node)
+                
+        if "Bar" in self.required_defs:
+            p = xml.dom.minidom.parseString("""
+            <defs><marker
+            refX="0"
+            refY="0"
+            orient="auto"
+            id="mBar"
+            style="overflow:visible">
+            <path d="M -7.5,-2.5 L -7.5,2.5" 
+             style="stroke:#000;stroke-width:1.0pt;marker-start:none;fill:none;" />
             </marker></defs>""")
             def_node = p.childNodes[0]
             for node in def_node.childNodes:
