@@ -116,32 +116,33 @@ class GraffleParser(object):
             self.svgItterateGraffleGraphics([background])
         elif self.fileinfo.fmt_version < 6:
             # Version 5 has a CanvasColor property instead
-            colour = mydict["CanvasColor"]
-            sty = {}
-            
-            # We have to guess the document's dimensions from the print size
-            # - these numbers appear to match up with the background size in 
-            #  version 6.
-            origin = parseCoords(mydict.get("CanvasOrigin","{0,0}"))
-            print_info = self.fileinfo.printinfo
-            
-            paper_size = print_info.paper_size
-                    
-            Lmargin = print_info.left_margin
-            Rmargin = print_info.right_margin
-            Tmargin = print_info.top_margin
-            Bmargin = print_info.bottom_margin
-            
-            x, y   = origin
-            width  = paper_size[0] - Lmargin - Rmargin
-            height = paper_size[1] - Bmargin - Tmargin
-            self.svg_addRect(self.svg_current_layer,
-                                    x = x,
-                                    y = y,
-                                    width = width,
-                                    height = height,
-                                    rx=None,
-                                    ry=None)
+            colour = mydict.get("CanvasColor")
+            if colour is not None:
+                sty = {}
+                
+                # We have to guess the document's dimensions from the print size
+                # - these numbers appear to match up with the background size in 
+                #  version 6.
+                origin = parseCoords(mydict.get("CanvasOrigin","{0,0}"))
+                print_info = self.fileinfo.printinfo
+                
+                paper_size = print_info.paper_size
+                        
+                Lmargin = print_info.left_margin
+                Rmargin = print_info.right_margin
+                Tmargin = print_info.top_margin
+                Bmargin = print_info.bottom_margin
+                
+                x, y   = origin
+                width  = paper_size[0] - Lmargin - Rmargin
+                height = paper_size[1] - Bmargin - Tmargin
+                self.svg_addRect(self.svg_current_layer,
+                                        x = x,
+                                        y = y,
+                                        width = width,
+                                        height = height,
+                                        rx=None,
+                                        ry=None)
         
         graphics = mydict["GraphicsList"]
         self.svgItterateGraffleGraphics(graphics)
