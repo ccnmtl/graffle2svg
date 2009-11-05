@@ -44,8 +44,8 @@ def extractRTFString(s):
         elif inst_code == "qc":
             style["text-align"] = "center"
         elif inst_code[:2]=="fs" and isint(inst_code[2:]):
-            # font size
-            style["font-size"] = inst_code[2:]+"pt"
+            # font size - RTF specifies half pt sizes
+            style["font-size"] = "%.1fpt"%(float(inst_code[2:])/2.)
         elif inst_code[:2]=="cf" and isint(inst_code[2:]):
             # font colour is enytry int(inst_code[2:]) in the colour table :-(
             # font is chosen from font table using fN (N\in\int)
@@ -87,3 +87,4 @@ def extractRTFString(s):
                 if not c in "{}\\\n\r":
                     # those characters are escaped
                     std_string += c
+    style.popScope()
