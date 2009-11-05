@@ -13,7 +13,9 @@ def extractRTFString(s):
     bracket_depth = 0
     instruction = False
     inst_code = ""
-    
+
+    ftable = FontTable()
+
     # The string being generated:
     std_string = ""
     style = CascadingStyles()
@@ -31,8 +33,8 @@ def extractRTFString(s):
 
 \f0\fs28 \cf0 Next ads are represented in a book-ended carousel on end screen}
     """
-    
-    def do_instruction(inst_code):
+
+    def do_instruction(inst_code, i):
         if inst_code == "b":
             style["font-weght"] = "bold"
         if inst_code == "ql":
@@ -43,6 +45,14 @@ def extractRTFString(s):
             style["text-align"] = "justify"
         elif inst_code == "qc":
             style["text-align"] = "center"
+        elif inst_code == "fonttbl":
+            i = ftable.parseTable(s,i)
+        elif inst_code[0]=="f" and inst_code[1:].isdigit():
+            # Font looked up in font table
+            font = ftable.fonts.get(int(inst_code[1:]),{})
+            for k,v in font.items():
+                if k != "":
+                    style[k] = v
         elif inst_code[:2]=="fs" and isint(inst_code[2:]):
             # font size - RTF specifies half pt sizes
             style["font-size"] = "%.1fpt"%(float(inst_code[2:])/2.)
@@ -50,8 +60,11 @@ def extractRTFString(s):
             # font colour is enytry int(inst_code[2:]) in the colour table :-(
             # font is chosen from font table using fN (N\in\int)
             pass
-    
-    for c in s:
+        return i
+    i = -1
+    while i < len(s)-1:
+        i += 1
+        c = s[i]
         if c == "{":
             bracket_depth +=1
             style.appendScope()
@@ -63,14 +76,14 @@ def extractRTFString(s):
             bracket_depth -=1
         elif c == "\\":
             if len(inst_code) > 0:
-                do_instruction(inst_code)
+                i = do_instruction(inst_code, i)
             instruction = True
             inst_code = ""
         
         if instruction:
             if c == " ":
                 instruction = False
-                do_instruction(inst_code)
+                i = do_instruction(inst_code, i)
             elif c == "\n":
                 instruction = False
                 if inst_code == "":
@@ -78,7 +91,7 @@ def extractRTFString(s):
                     yield {"string":std_string, "style":str(style)}
                     std_string = ""
                 else:
-                    do_instruction(inst_code)
+                    i = do_instruction(inst_code, i)
             elif c != "\\":
                 inst_code += c
 
@@ -88,3 +101,77 @@ def extractRTFString(s):
                     # those characters are escaped
                     std_string += c
     style.popScope()
+
+
+class FontTable(object):
+    def __init__(self):
+        self.fonts = {}
+        # For parsing
+        self.varname = ""
+        self.fontnum = 0
+
+    def parseTable(self, defn, startidx):
+        #{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+        i = startidx
+        in_name = False
+        tkn_string = ""
+        fontnum = ""
+        tkn_name = ""
+
+        def process_string():
+            if tkn_name == "fcharset":
+                font_opns = self.fonts.get(fontnum,{})
+                existing_font = font_opns.get("font-family","")
+                if existing_font != "":
+                    existing_font = ","+existing_font
+                font_opns["font-family"] = tkn_string + existing_font
+                self.fonts[fontnum] = font_opns
+
+            if tkn_name == "fswiss":
+                font_opns = self.fonts.get(fontnum,{})
+                font_opns["font-family"] = "Sans-serif"
+                self.fonts[fontnum] = font_opns
+
+            if tkn_name == "froman":
+                 font_opns = self.fonts.get(fontnum,{})
+                 font_opns["font-family"] = "Serif"
+                 self.fonts[fontnum] = font_opns
+        
+        while i < len(defn):
+            c = defn[i]
+            if c == "}":
+                if in_name:
+                    tkn_name = tkn_string
+                    tkn_string = ""
+                process_string()
+                break
+            elif c == "{":
+                pass
+            elif c == "\\":
+                if in_name:
+                    tkn_name = tkn_string
+                    tkn_string = ""
+                process_string()
+                in_name = True
+                tkn_string = ""
+                tkn_name = ""
+            elif c.isdigit():
+                if tkn_string == "f":
+                    fontnum = int(str(fontnum) + c)
+                    tkn_name = tkn_string
+                    tkn_string = ""
+                    in_name = False
+                if not in_name:
+                    tkn_string = tkn_string + c
+            elif c == " ":
+                if in_name:
+                    in_name = False
+                    tkn_name = tkn_string
+                    tkn_string = ""
+                else:
+                    tkn_string = tkn_string + c
+            else:
+                tkn_string = tkn_string + c
+            i += 1
+
+        return i-1
