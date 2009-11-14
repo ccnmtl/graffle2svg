@@ -6,7 +6,7 @@ try:
 except:
     pass
 
-version = '0.2'
+version = '0.3'
 
 setup(name='graffle2svg',
       version=version,
