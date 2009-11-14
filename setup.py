@@ -1,6 +1,11 @@
 from setuptools import setup, find_packages
 import sys, os
 
+try:
+    import py2exe
+except:
+    pass
+
 version = '0.2'
 
 setup(name='graffle2svg',
@@ -23,5 +28,6 @@ Convert omnigraffle files to svg images""",
       entry_points="""
       # -*- Entry points: -*-
       """,
-      scripts=["graffle2svg/scripts/graffle2svg","graffle2svg/scripts/graffle2svgview"]
+      scripts=["graffle2svg/scripts/graffle2svg","graffle2svg/scripts/graffle2svgview"],
+      console=["graffle2svg/scripts/graffle2svg","graffle2svg/scripts/graffle2svgview"] #py2exe
       )
