@@ -285,7 +285,18 @@ class GraffleParser(object):
                     
                     self.style.popScope()
                     self.svg_current_layer = current_layer
-                
+            elif cls == "Group":
+                subgraphics = graphics.get("Graphics")
+                if subgraphics is not None:
+                    current_layer = self.svg_current_layer
+                    self.style.appendScope()
+                    g_emt = self.svg_dom.createElement("g")
+                    g_emt.setAttribute("style",str(self.style))
+                    current_layer.appendChild(g_emt)
+                    self.svg_current_layer = g_emt
+                    self.svgItterateGraffleGraphics(subgraphics)
+                    self.style.popScope()
+                    self.svg_current_layer = current_layer
             else:
                 print "Don't know how to display Class \"%s\""%cls
                 
