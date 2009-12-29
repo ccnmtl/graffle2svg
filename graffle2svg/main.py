@@ -364,6 +364,12 @@ class GraffleParser(object):
                                         bounds = bounds,
                                         **extra_opts \
                                         )
+        elif shape == "VerticalTriangle":
+            bounds = self.extractBoundCOordinates(graphic['Bounds'])
+            self.svg_addVerticalTriangle(self.svg_current_layer,
+                                         bounds = bounds,
+                                         **extra_opts \
+                                         )
         elif shape == "Circle":
             # Actually can be an ellipse
             bounds = self.extractBoundCOordinates(graphic["Bounds"])
@@ -599,6 +605,12 @@ class GraffleParser(object):
         """Graffle has the "RightTriangle" Shape"""
         x,y,width,height = [float(a) for a in bounds]
         self.svg_addPath(node, [[x,y],[x+width,y+height], [x,y+height]], \
+                        closepath=True, **opts)
+
+    def svg_addVerticalTriangle(self, node, bounds, rotation = 0, **opts):
+        """Graffle has the "RightTriangle" Shape"""
+        x,y,width,height = [float(a) for a in bounds]
+        self.svg_addPath(node, [[x,y],[x+width,y], [x+width/2,y+height]], \
                         closepath=True, **opts)
             
     def svg_addRect(self, node, **opts):
