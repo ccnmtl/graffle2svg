@@ -146,7 +146,7 @@ class GraffleParser(object):
                                         rx=None,
                                         ry=None)
         
-        graphics = mydict["GraphicsList"]
+        graphics = reversed(mydict["GraphicsList"])
         self.svgItterateGraffleGraphics(graphics)
         
     def ReturnGraffleNode(self, parent):
