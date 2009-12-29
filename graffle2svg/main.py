@@ -283,7 +283,7 @@ class GraffleParser(object):
                     current_layer.appendChild(g_emt)
                     self.svg_current_layer = g_emt
                     
-                    self.svgItterateGraffleGraphics(table_graphics)
+                    self.svgItterateGraffleGraphics(reversed(table_graphics))
                     
                     self.style.popScope()
                     self.svg_current_layer = current_layer
@@ -296,7 +296,7 @@ class GraffleParser(object):
                     g_emt.setAttribute("style",str(self.style))
                     current_layer.appendChild(g_emt)
                     self.svg_current_layer = g_emt
-                    self.svgItterateGraffleGraphics(subgraphics)
+                    self.svgItterateGraffleGraphics(reversed(subgraphics))
                     self.style.popScope()
                     self.svg_current_layer = current_layer
             else:
