@@ -91,7 +91,7 @@ class GraffleParser(object):
             
             if localname == "plist":
                 # Apple's main container
-                self.walkGraffleDoc(e)
+                self.walkGraffleDoc(e,page)
                 
             if localname == "dict":
                 mydict = self.ReturnGraffleDict(e)
