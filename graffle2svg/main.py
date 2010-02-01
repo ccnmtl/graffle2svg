@@ -440,14 +440,15 @@ class GraffleParser(object):
     def svgSetGraffleFont(self, font):
         if font is None: return
         fontstuffs = []
-
+        font_col = "000000"
+        
         if font.get("Color") is not None:
             grap_col = font.get("Color")
             try:
                 font_col = self.extract_colour(grap_col)
             except:
                 font_col = "000000"
-            fontstuffs.append("fill:#%s"%font_col)
+        fontstuffs.append("fill:#%s"%font_col)
             
         fontfam = font.get("Font")
         if fontfam is not None:
