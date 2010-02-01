@@ -91,7 +91,7 @@ class GraffleParser(object):
             
             if localname == "plist":
                 # Apple's main container
-                self.walkGraffleDoc(e)
+                self.walkGraffleDoc(e,page=page)
                 
             if localname == "dict":
                 mydict = self.ReturnGraffleDict(e)
@@ -310,7 +310,7 @@ class GraffleParser(object):
                 
                 x, y, width, height = coords
                 self.svg_addText(self.svg_current_layer, rtftext = graphics.get("Text").get("Text",""),
-                                 x = x, y = y, width = width, height = height)
+                                 x = x+width/2, y = y+height/2, width = width, height = height, fontinfo = graphics.get("FontInfo"))
             self.style.popScope()
             
             
@@ -325,7 +325,7 @@ class GraffleParser(object):
         if graphic.get("Rotation") is not None:
             extra_opts["Rotation"] = float(graphic["Rotation"])
             
-        if shape == 'Rectangle':
+        if shape == 'Rectangle' or shape == 'RoundRect':
             coords = self.extractBoundCOordinates(graphic['Bounds'])
             if graphic.get("ImageID") is not None:
                 # TODO: images
@@ -408,7 +408,7 @@ class GraffleParser(object):
             if stroke.get("HeadArrow") is not None:
                 headarrow = stroke["HeadArrow"]
                 if headarrow == "FilledArrow":
-                    self.style["marker-end"]=":url(#Arrow1Lend)"
+                    self.style["marker-end"]="url(#Arrow1Lend)"
                     self.required_defs.add("Arrow1Lend")
                 elif headarrow == "Bar":
                     #TODO
@@ -451,6 +451,10 @@ class GraffleParser(object):
             
         fontfam = font.get("Font")
         if fontfam is not None:
+            if fontfam == "LucidaGrande":
+                fontfam = "Lucida Sans"
+            elif fontfam == "Courier":
+                fontfam = "Courier New"
             fontstuffs.append("font-family: %s"%fontfam)
             
         size = font.get("Size")
@@ -501,7 +505,7 @@ class GraffleParser(object):
         if "DropShadow" in self.required_defs:
             p = xml.dom.minidom.parseString("""
             <defs><filter id="DropShadow" filterRes="100" x="0" y="0">
-               <feGaussianBlur stdDeviation="3" result="myblur"/>
+               <feGaussianBlur stdDeviation="3" result="MyBlur"/>
                <feOffset in="MyBlur" dx="2" dy="4" result="movedBlur"/>
                <feMerge>
                    <feMergeNode in="movedBlur"/>
@@ -625,19 +629,24 @@ class GraffleParser(object):
         text_tag.setAttribute("id",opts.get("id",""))
         text_tag.setAttribute("x",str(opts.get("x","0")))
         text_tag.setAttribute("y",str(opts.get("y","0")))
-        text_tag.setAttribute("style", ";".join( \
-                                [str(self.style.scopeStyle()),self.svg_current_font]))
+        text_tag.setAttribute("text-anchor","middle")
+#        text_tag.setAttribute("dominant-baseline","mathematical")
+        text_tag.setAttribute("style", self.svg_current_font)
         node.appendChild(text_tag)
         
         # TODO: lines need to be moved down by the correct size
         
         # Generator
         lines = extractRTFString(opts["rtftext"])
-        
+        font_info =  opts.get("fontinfo",None)
+        if font_info is not None:
+            font_height = int(font_info.get("Size"))
+        else:
+            font_height = 12
         i = 0
         for span in lines:
             self.svg_addLine(text_tag,text = span["string"], style = span["style"],\
-                    y_offset = i, line_height = 12, **opts)
+                    y_offset = i, line_height =font_height, **opts)
             i+=1
         
     def svg_addLine(self,textnode, **opts):
@@ -645,10 +654,11 @@ class GraffleParser(object):
         tspan_node = self.svg_dom.createElement("tspan")
         tspan_node.setAttribute("id",opts.get("id",""))
         tspan_node.setAttribute("x",str(opts.get("x","0")))
+        '''tspan_node.setAttribute("baseline-shift","-50%")'''
         y_pos = float(opts.get("y",0)) + \
-                opts.get("line_height",12) * (opts.get("y_offset",0)+1)
-        if opts.get("style") is not None:
-            tspan_node.setAttribute("style",str(opts["style"]))
+                opts.get("line_height",12) * (opts.get("y_offset",0)+0.5)
+        '''if opts.get("style") is not None:
+            tspan_node.setAttribute("style",str(opts["style"]))'''
         tspan_node.setAttribute("y",str(y_pos))
         actual_string = self.svg_dom.createTextNode(opts.get("text"," "))
         tspan_node.appendChild(actual_string)
