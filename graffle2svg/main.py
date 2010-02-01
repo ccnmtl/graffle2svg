@@ -91,7 +91,7 @@ class GraffleParser(object):
             
             if localname == "plist":
                 # Apple's main container
-                self.walkGraffleDoc(e,page=page)
+                self.walkGraffleDoc(e,page)
                 
             if localname == "dict":
                 mydict = self.ReturnGraffleDict(e)
@@ -146,7 +146,7 @@ class GraffleParser(object):
                                         rx=None,
                                         ry=None)
         
-        graphics = mydict["GraphicsList"]
+        graphics = reversed(mydict["GraphicsList"])
         self.svgItterateGraffleGraphics(graphics)
         
     def ReturnGraffleNode(self, parent):
@@ -283,7 +283,7 @@ class GraffleParser(object):
                     current_layer.appendChild(g_emt)
                     self.svg_current_layer = g_emt
                     
-                    self.svgItterateGraffleGraphics(table_graphics)
+                    self.svgItterateGraffleGraphics(reversed(table_graphics))
                     
                     self.style.popScope()
                     self.svg_current_layer = current_layer
@@ -296,7 +296,7 @@ class GraffleParser(object):
                     g_emt.setAttribute("style",str(self.style))
                     current_layer.appendChild(g_emt)
                     self.svg_current_layer = g_emt
-                    self.svgItterateGraffleGraphics(subgraphics)
+                    self.svgItterateGraffleGraphics(reversed(subgraphics))
                     self.style.popScope()
                     self.svg_current_layer = current_layer
             else:
@@ -309,6 +309,8 @@ class GraffleParser(object):
                 self.svgSetGraffleFont(graphics.get("FontInfo"))
                 
                 x, y, width, height = coords
+                x += graphics['Text'].get('Pad',0)
+                y += graphics['Text'].get('VerticalPad',0)
                 self.svg_addText(self.svg_current_layer, rtftext = graphics.get("Text").get("Text",""),
                                  x = x+width/2, y = y+height/2, width = width, height = height, fontinfo = graphics.get("FontInfo"))
             self.style.popScope()
@@ -364,6 +366,12 @@ class GraffleParser(object):
                                         bounds = bounds,
                                         **extra_opts \
                                         )
+        elif shape == "VerticalTriangle":
+            bounds = self.extractBoundCOordinates(graphic['Bounds'])
+            self.svg_addVerticalTriangle(self.svg_current_layer,
+                                         bounds = bounds,
+                                         **extra_opts \
+                                         )
         elif shape == "Circle":
             # Actually can be an ellipse
             bounds = self.extractBoundCOordinates(graphic["Bounds"])
@@ -604,6 +612,12 @@ class GraffleParser(object):
         """Graffle has the "RightTriangle" Shape"""
         x,y,width,height = [float(a) for a in bounds]
         self.svg_addPath(node, [[x,y],[x+width,y+height], [x,y+height]], \
+                        closepath=True, **opts)
+
+    def svg_addVerticalTriangle(self, node, bounds, rotation = 0, **opts):
+        """Graffle has the "RightTriangle" Shape"""
+        x,y,width,height = [float(a) for a in bounds]
+        self.svg_addPath(node, [[x,y],[x+width,y], [x+width/2,y+height]], \
                         closepath=True, **opts)
             
     def svg_addRect(self, node, **opts):
