@@ -379,6 +379,11 @@ class GraffleParser(object):
                                         bounds = bounds,
                                         **extra_opts \
                                         )
+        elif shape == "Bezier":
+            bounds = self.extractBoundCOordinates(graphic["Bounds"])
+            self.svg_addBezier(self.svg_current_layer,
+                                        bounds, graphic["ShapeData"],
+                                        **extra_opts)
         else:
             print "Don't know how to display Shape %s"%str(graphic['Shape'])
             
@@ -550,6 +555,32 @@ class GraffleParser(object):
             def_node = p.childNodes[0]
             for node in def_node.childNodes:
                 self.svg_def.appendChild(node)
+
+    def svg_addBezier(self, node, bounds, shapeopts, **opts):
+        points = shapeopts["UnitPoints"]
+        points =[self.extractBoundCOordinates(pt) for pt in points]
+        c = [bounds[i] + (bounds[i+2]/2.) for i in [0, 1]] #centre
+        rx = bounds[2]/2.
+        ry = bounds[3]/2.
+
+        # These points are relative to the bounds
+        points = [ [c[0] + pt[0] * rx, c[1] + pt[1] * ry] for pt in points]
+
+        if opts.get("HFlip", False):
+            points = geom.h_flip_points(points)
+        if opts.get("VFlip", False):
+            points = geom.v_flip_points(points)
+        if opts.get("Rotation") is not None:
+            points = geom.rotate_points(points, opts["Rotation"])
+
+        ptStrings = [",".join([str(b) for b in a]) for a in points]
+        line_string = "M %s"%ptStrings[0] + " ".join(" L %s"%a for a in ptStrings[1:])
+        
+        path_tag = self.svg_dom.createElement("path")
+        path_tag.setAttribute("id", opts.get("id",""))
+        path_tag.setAttribute("style", str(self.style.scopeStyle()))
+        path_tag.setAttribute("d", line_string)
+        node.appendChild(path_tag)
 
     def svg_addEllipse(self, node, bounds, **opts):
         c = [bounds[i] + (bounds[i+2]/2.) for i in [0,1]] # centre of circle
