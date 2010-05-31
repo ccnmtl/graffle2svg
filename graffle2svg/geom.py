@@ -68,10 +68,7 @@ def rotate_points(pts, angle=0, centre=None):
         if (relx,rely) == (0.,0.):
             outpts.append(0.,0.)
             continue
-        # polars
-        theta = math.atan(rely/float(relx))
-        r = math.sqrt(relx*relx + rely*rely)
-        newx = xc + (r * math.cos(theta + phi))
-        newy = yc + (r * math.sin(theta + phi))
+        newx = xc + (math.cos(phi)*relx-math.sin(phi)*rely)
+        newy = yc + (math.sin(phi)*relx+math.cos(phi)*rely)
         outpts.append( [newx,newy] )
     return outpts
