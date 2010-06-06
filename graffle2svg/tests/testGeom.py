@@ -1,6 +1,19 @@
 
 from unittest import makeSuite, TestCase, TestSuite
-import geom 
+import geom
+
+class TestGeom(TestCase):
+    def assertFigureAlmostEqual(self,first,second,places=7, msg=None):
+        if len(first) != len(second):
+            raise self.failureException, (msg or 'sizes different')
+        for i in range(len(first)):
+            if round(abs(second[i][0]-first[i][0]),places) != 0:
+                            raise self.failureException, \
+                  (msg or '%r != %r within %r places at rank %r' % (first, second, places,i))
+            if round(abs(second[i][1]-first[i][1]),places) != 0:
+                            raise self.failureException, \
+                  (msg or '%r != %r within %r places at rank %r' % (first, second, places,i))
+
 
 class TestCentre(TestCase):
         
@@ -22,30 +35,27 @@ class TestCentre(TestCase):
         assert centre[0] == -2
         assert centre[1] == 0
 
-class TestRotate(TestCase):
+class TestRotate(TestGeom):
     def testIdentic(self):
         pts=((-1., 1.), (1., 1.))
         rotated =geom.rotate_points(pts)
-        assert rotated==((-1.0, 1.0), (1.0, 1.0))
+        self.assertFigureAlmostEqual(rotated,((-1.0, 1.0), (1.0, 1.0)))
 
     def testOpposite(self):
         pts=((-1., 1.), (1., 1.))
         rotated =geom.rotate_points(pts, angle=180.)
-        assert rotated==[[1., 1.], [-1., 1.]]
+        self.assertFigureAlmostEqual(rotated,[[1., 1.], [-1., 1.]])
  
     def test360(self):
         pts=((-1., 1.), (1., 1.))
         rotated =geom.rotate_points(pts, 360)
-        assert rotated==((-1.0, 1.0), (1.0, 1.0))
+        self.assertFigureAlmostEqual(rotated,((-1.0, 1.0), (1.0, 1.0)))
         
     def test90(self):
-        pts=((-1., 1.), (1., 1.))
+        pts=((-1., 1.), (3., 1.),(-1,-2))
         rotated =geom.rotate_points(pts,90)
-        self.assertAlmostEqual(0,rotated[0][0],4)
-        self.assertAlmostEqual(0,rotated[0][1],4)
-        self.assertAlmostEqual(0,rotated[1][0],4)
-        self.assertAlmostEqual(2,rotated[1][1],4)
-        
+        self.assertFigureAlmostEqual(rotated,((-0.5,-2.5),(-0.5,1.5),(2.5,-2.5)))
+
       
 def get_tests():
     TS = TestSuite()
