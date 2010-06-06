@@ -56,6 +56,16 @@ class TestRotate(TestGeom):
         rotated =geom.rotate_points(pts,90)
         self.assertFigureAlmostEqual(rotated,((-0.5,-2.5),(-0.5,1.5),(2.5,-2.5)))
 
+    def testRounding360(self):
+        pts=((-1., 1.), (1., 1.))
+        rotated =geom.rotate_points(pts, 359.999999)
+        self.assertFigureAlmostEqual(rotated,((-1.0, 1.0), (1.0, 1.0)))
+        
+    def testRoundingOpposite(self):
+        pts=((-1., 1.), (1., 1.))
+        rotated =geom.rotate_points(pts, 180.000001)
+        self.assertFigureAlmostEqual(rotated,[[1., 1.], [-1., 1.]])
+
       
 def get_tests():
     TS = TestSuite()
