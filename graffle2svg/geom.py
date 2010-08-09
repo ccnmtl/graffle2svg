@@ -51,9 +51,9 @@ def v_flip_points(pts,centre=None):
 def rotate_points(pts, angle=0, centre=None):
     if centre is None:
         centre = findcentre(pts)
-    if angle % 360 == 0:
+    if round(angle % 360,7) == 0:
         return pts
-    elif angle % 180 == 0:
+    elif round(angle % 180,7) == 0:
         return h_flip_points (
                    v_flip_points(pts, centre),
                    centre)
@@ -61,6 +61,8 @@ def rotate_points(pts, angle=0, centre=None):
     phi = (angle * math.pi * 2.) / 360.
     xc,yc = centre
     outpts = []
+    cs = math.cos(phi)
+    sn = math.sin(phi)
     # angle we're changing by
     for (x,y) in pts:
         # relative to centres
@@ -68,10 +70,7 @@ def rotate_points(pts, angle=0, centre=None):
         if (relx,rely) == (0.,0.):
             outpts.append(0.,0.)
             continue
-        # polars
-        theta = math.atan(rely/float(relx))
-        r = math.sqrt(relx*relx + rely*rely)
-        newx = xc + (r * math.cos(theta + phi))
-        newy = yc + (r * math.sin(theta + phi))
+        newx = xc + (cs*relx-sn*rely)
+        newy = yc + (sn*relx+cs*rely)
         outpts.append( [newx,newy] )
     return outpts
